@@ -6,6 +6,7 @@ import torch
 import torchvision.datasets as dset
 import numpy as np
 import preproc
+import time
 
 
 def get_data(dataset, data_path, cutout_length, validation):
@@ -28,7 +29,7 @@ def get_data(dataset, data_path, cutout_length, validation):
     trn_data = dset_cls(root=data_path, train=True, download=True, transform=trn_transform)
 
     # assuming shape is NHW or NHWC
-    shape = trn_data.train_data.shape
+    shape = trn_data.data.shape
     input_channels = 3 if len(shape) == 4 else 1
     assert shape[1] == shape[2], "not expected shape = {}".format(shape)
     input_size = shape[1]
@@ -112,3 +113,24 @@ def save_checkpoint(state, ckpt_dir, is_best=False):
     if is_best:
         best_filename = os.path.join(ckpt_dir, 'best.pth.tar')
         shutil.copyfile(filename, best_filename)
+
+
+class Timer():
+    """ Timer for check elapsed time """
+    def __init__(self, logger):
+        self.ticks = []
+        self.logger = logger
+        self.record()
+    
+    def record(self):
+        self.ticks.append(time.time())
+
+    def elapsed_time(self, record=True, name='Total Elapsed Time'):
+        if record: self.record()
+        elapsed = self.ticks[-1] - self.ticks[0]
+        logger.info(f'{name}:' + time.strftime('%dday %H:%M:%S', time.gmtime(int(elapsed))))
+    
+    def split_time(self, record=True, name='Epoch Elapsed Time'):
+        if record: self.record()
+        elapsed = self.ticks[-1] - self.ticks[-2]
+        logger.info(f'{name}:' + time.strftime('%dday %H:%M:%S', time.gmtime(int(elapsed))))
