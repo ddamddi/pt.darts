@@ -20,6 +20,7 @@ writer.add_text('config', config.as_markdown(), 0)
 logger = utils.get_logger(os.path.join(config.path, "{}.log".format(config.name)))
 config.print_params(logger.info)
 
+timer = Timer(logger)
 
 def main():
     logger.info("Logger is set - training start")
@@ -65,6 +66,7 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, config.epochs)
 
     best_top1 = 0.
+    timer.record()
     # training loop
     for epoch in range(config.epochs):
         lr_scheduler.step()
@@ -87,8 +89,10 @@ def main():
         utils.save_checkpoint(model, config.path, is_best)
 
         print("")
+        timer.split_time()
 
     logger.info("Final best Prec@1 = {:.4%}".format(best_top1))
+    timer.elapsed_time()
 
 
 def train(train_loader, model, optimizer, criterion, epoch):
